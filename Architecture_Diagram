@@ -1,0 +1,95 @@
+graph LR
+    subgraph Client (User Interface)
+        A[Web Browser] --> B(Retry & Replay UI);
+    end
+
+    subgraph Backend (Spring Boot Application)
+        B --> C{API Gateway (Optional)};
+        C --> D(Web Controllers);
+        D --> E(Retry Management Service);
+        D --> F(Replay Management Service);
+        D --> G(Dashboard Service);
+        D --> H(Authentication & Authorization);
+        D --> I(Notification Service);
+
+        E --> J(Job Scheduler (Quartz));
+        J --> K[Retry Job];
+        K -- Uses --> L(Retry Strategies);
+        L -- Fixed Interval --> K;
+        L -- Exponential Backoff --> K;
+        L -- Circuit Breaker --> K;
+        L -- Jitter --> K;
+        K -- Interacts with --> M[Target Integrated Systems];
+        K -- Logs --> N(Logging Service);
+        K -- Sends Notification --> I;
+        K -- (Optional) Publishes Event --> O(Kafka Broker);
+
+        F --> P(Transaction Retrieval);
+        F --> Q(Validation Service);
+        F --> R(Replay Execution Engine);
+        R -- Interacts with --> M;
+        R -- Logs --> N;
+        R -- Sends Notification --> I;
+
+        G --> S(Transaction Status Repository);
+        G --> T(Retry History Repository);
+        G --> U(Replay History Repository);
+
+        H -- Authenticates/Authorizes --> B;
+        H -- Enforces Roles on --> D;
+
+        I --> V(Email Service);
+        I -- (Optional) Creates Incident --> W[Incident Management System];
+
+        O -- Consumes Event --> X[Event-Driven Retry Listener];
+        X --> E;
+
+        subgraph Data Stores
+            S -- Stores Status --> Y[Database];
+            T -- Stores Retry History --> Y;
+            U -- Stores Replay History --> Y;
+            N -- Writes Logs To --> Z[Log File/Centralized Logging];
+        end
+    end
+
+Explanation of the Architecture Diagram:
+
+Client (User Interface):
+
+A (Web Browser): The user interacts with the application through a web browser.
+B (Retry & Replay UI): The web-based user interface built using HTML, CSS, JavaScript, and potentially a frontend framework. It allows users to monitor, configure, trigger, and manage retry and replay operations.
+Backend (Spring Boot Application):
+
+C (API Gateway - Optional): An optional component that acts as a single entry point for all client requests, handling routing, security, and other cross-cutting concerns.
+D (Web Controllers): Handle incoming HTTP requests from the UI and delegate business logic to the appropriate services.
+E (Retry Management Service): Responsible for managing retry configurations, scheduling retry jobs, and initiating retry attempts based on defined strategies.
+F (Replay Management Service): Handles the manual replay process, including transaction retrieval, validation, execution, and status updates.
+G (Dashboard Service): Provides data and logic to populate the monitoring dashboard with transaction statuses and history.
+H (Authentication & Authorization): Enforces security by authenticating users and authorizing their access to specific features based on their roles.
+I (Notification Service): Manages the sending of email alerts and the optional creation of incidents in external systems.
+J (Job Scheduler (Quartz)): Schedules and triggers retry jobs based on configured intervals and policies.
+K (Retry Job): The actual job executed by Quartz that attempts to re-process a failed transaction using the configured retry strategies.
+L (Retry Strategies): Contains the implementations for different retry strategies (Fixed Interval, Exponential Backoff, Circuit Breaker, Jitter).
+M (Target Integrated Systems): Represents the external systems that the framework interacts with and where failures might occur.
+N (Logging Service): Handles structured logging of all relevant events, including retry attempts, replay executions, and errors, potentially writing to a log file or a centralized logging system.
+O (Kafka Broker - Optional): If event-driven retries are implemented, Kafka acts as the message broker for asynchronous communication.
+X (Event-Driven Retry Listener - Optional): A component that consumes retry events from Kafka and triggers the Retry Management Service.
+P (Transaction Retrieval): Responsible for fetching the details of a transaction that needs to be replayed.
+Q (Validation Service): Performs validation checks before replaying a transaction to ensure data integrity and context adherence.
+R (Replay Execution Engine): Executes the replay of a selected transaction, interacting with the target integrated systems.
+V (Email Service): Handles the actual sending of emails using JavaMail or a similar library.
+W (Incident Management System - Optional): An external system where incidents can be created based on persistent failures.
+Data Stores:
+
+Y (Database): A relational database used to persist framework metadata such as transaction statuses, retry history, and replay history.
+Z (Log File/Centralized Logging): The destination for the application logs, which could be local files or a centralized logging system like ELK stack or Splunk.
+Key Interactions:
+
+The UI interacts with the Backend through RESTful APIs (likely).
+The Retry Management Service uses Quartz to schedule retry jobs.
+Retry Jobs and the Replay Execution Engine interact with the Target Integrated Systems.
+The Logging Service is used by various components to record events.
+The Notification Service sends emails and optionally creates incidents.
+The Dashboard Service retrieves data from the Database to display system status.
+(Optional) Kafka enables asynchronous event-driven retries.
+This diagram provides a high-level overview of the architecture. The specific implementation details and the technologies chosen for the UI and data persistence might vary based on the participant's design choices.
