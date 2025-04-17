@@ -1,0 +1,154 @@
+While the core requirements don't mandate Docker, it's highly recommended for simplifying the setup of external dependencies like Kafka and a database, especially for development and testing. Here's a section outlining potential Docker instructions that should be included in the project's documentation (likely within a docker/ directory or the main README.md):
+
+Docker Setup (Recommended for Development)
+
+This project can leverage Docker and Docker Compose to easily set up its dependencies. This approach provides an isolated and consistent environment, simplifying the development process.
+
+Prerequisites:
+
+Docker: Ensure you have Docker installed on your system. You can download it from https://www.docker.com/get-started/.
+Docker Compose: Docker Compose is usually installed along with Docker Desktop. If you installed Docker Engine separately, you might need to install Docker Compose separately. You can check if it's installed by running docker-compose -v in your terminal.
+Steps:
+
+Create docker-compose.yml (if not already present):
+In the root of your project directory, create a file named docker-compose.yml (or if one is provided, review and adjust it). This file will define the services needed for the project.
+
+Here's an example docker-compose.yml that sets up a PostgreSQL database and a Kafka broker (using wurstmeister/kafka which includes Zookeeper):
+
+YAML
+
+version: '3.8'
+services:
+  postgres:
+    image: postgres:13
+    container_name: retry-replay-db
+    environment:
+      POSTGRES_USER: <your_db_user>
+      POSTGRES_PASSWORD: <your_db_password>
+      POSTGRES_DB: retry_replay
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: retry-replay-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal # Or your machine's IP if host.docker.internal doesn't work
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+
+volumes:
+  postgres_data:
+Replace the placeholders <your_db_user> and <your_db_password> with your desired database credentials.
+
+Start the Docker Containers:
+Open your terminal, navigate to the root of your project directory (where the docker-compose.yml file is located), and run the following command:
+
+Bash
+
+docker-compose up -d
+This command will download the necessary images and start the PostgreSQL and Kafka containers in detached mode (in the background).
+
+Configure the Spring Boot Application:
+Update your src/main/resources/application.properties or src/main/resources/application.yml file to connect to the Dockerized services:
+
+PostgreSQL:
+
+Properties
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/retry_replay
+spring.datasource.username=<your_db_user>
+spring.datasource.password=<your_db_password>
+spring.jpa.hibernate.ddl-auto=update # Or your preferred DDL strategy
+Replace <your_db_user> and <your_db_password> with the same values you used in the docker-compose.yml.
+
+Kafka:
+
+Properties
+
+spring.kafka.bootstrap-servers=localhost:9092
+# Add other Kafka configurations as needed
+Run the Spring Boot Application:
+You can now run the Spring Boot application as described in the "How to Run Locally (Dev Setup)" section (either from your IDE or using mvn spring-boot:run). It will connect to the PostgreSQL database and Kafka broker running in the Docker containers.
+
+Stop the Docker Containers:
+When you are finished with your development session, you can stop the Docker containers by running the following command in the project root directory:
+
+Bash
+
+docker-compose down
+This will gracefully stop and remove the containers.
+
+Optional Dockerization of the Application Itself:
+
+For more advanced scenarios or for easier deployment, you might also consider creating a Dockerfile to containerize the Retry & Replay Framework application itself. This would involve:
+
+Create a Dockerfile: In the root of your project directory, create a file named Dockerfile.
+
+Dockerfile
+
+FROM openjdk:17-jdk-slim
+VOLUME /tmp
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+Build the Docker Image:
+Navigate to the project root directory and run:
+
+Bash
+
+docker build -t retry-replay-app .
+Update docker-compose.yml to include the application:
+
+YAML
+
+version: '3.8'
+services:
+  retry-replay-app:
+    image: retry-replay-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/retry_replay
+      SPRING_DATASOURCE_USERNAME: <your_db_user>
+      SPRING_DATASOURCE_PASSWORD: <your_db_password>
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  postgres:
+    # ... (PostgreSQL service definition as before)
+
+  zookeeper:
+    # ... (Zookeeper service definition as before)
+
+  kafka:
+    # ... (Kafka service definition as before)
+
+volumes:
+  postgres_data:
+Start all services:
+
+Bash
+
+docker-compose up -d
+Now, your application will also run within a Docker container and will be linked to the PostgreSQL and Kafka containers.
+
+Benefits of using Docker:
+
+Simplified Setup: Easily spin up dependencies without manual installation.
+Isolated Environment: Prevents conflicts with your local system setup.
+Consistent Environment: Ensures that everyone working on the project uses the same versions of dependencies.
+Easier Deployment: Containerization makes deployment to various environments more straightforward.
+By including these Docker instructions, you provide a convenient and efficient way for developers to set up and run the Retry & Replay Framework locally. Remember to replace the placeholder values with your desired configurations.
