@@ -1,0 +1,28 @@
+The core tech stack for this Retry & Replay Framework project, as explicitly mentioned in the problem description, includes:
+
+Java: The primary programming language for building the backend logic.
+Spring Boot: A framework to simplify the development of stand-alone, production-grade Spring-based applications. It provides features like auto-configuration, embedded web servers, and easy dependency management.
+Quartz: A powerful open-source job scheduling library that will be used to implement the configurable job scheduler for automated retries.
+Apache Camel: An integration framework that will likely be used to facilitate communication and interaction with various integrated systems during retry and replay processes. It supports various Enterprise Integration Patterns.
+Kafka (Optional): A distributed streaming platform that can be used for implementing event-driven retries, providing a decoupled and scalable approach.
+Beyond these mandatory technologies, the project will likely involve other technologies to fulfill the requirements:
+
+Web Development (for UI):
+HTML, CSS, JavaScript: Foundational web technologies for building the user interface.
+A Frontend Framework/Library (e.g., React, Angular, Vue.js, or even Thymeleaf/JSP with Spring MVC): To structure and enhance the user interface development. The choice will depend on the participant's preference and the complexity they aim for.
+Data Persistence (for storing framework metadata):
+A Relational Database (e.g., PostgreSQL, MySQL, H2): To store information about retry configurations, transaction statuses, replay history, etc. Spring Data JPA will likely be used for database interaction.
+Logging:
+Spring Boot Logging (e.g., Logback, Log4j2): For structured logging with correlation IDs.
+Email Notification:
+JavaMail API (integrated with Spring Mail): For sending email alerts.
+Template Engine (e.g., Thymeleaf): For creating configurable email templates.
+Authentication and Authorization:
+Spring Security: For implementing role-based authentication and securing access to the UI and potentially backend APIs.
+Build and Dependency Management:
+Maven: As indicated by the pom.xml in the conceptual repository structure.
+Testing:
+JUnit: For unit testing Java components.
+Spring Test: For integration testing Spring Boot applications.
+Mockito (or similar): For mocking dependencies in tests.
+In summary, the core tech stack revolves around Java, Spring Boot, Quartz, and potentially Apache Camel and Kafka. The implementation will then leverage additional technologies for building the UI, handling data persistence, logging, notifications, security, and testing.
