@@ -1,0 +1,95 @@
+To run this Retry & Replay Framework locally for development, follow these general steps. The specifics might vary slightly depending on the chosen technologies and your operating system.
+
+Prerequisites:
+
+Java Development Kit (JDK): Ensure you have a compatible Java version installed (e.g., Java 11 or later). You can check your version by running java -version in your terminal or command prompt.
+Maven: This project uses Maven for build automation and dependency management. Download and install Maven from https://maven.apache.org/download.cgi. Verify your installation by running mvn -v.
+Git: You'll need Git to clone the project repository. Install it from https://git-scm.com/downloads.
+An IDE (Optional but Recommended): IntelliJ IDEA, Eclipse, or VS Code with Java extensions can greatly enhance your development experience.
+Docker (Optional, for Kafka and Database): If you plan to use Kafka for event-driven retries or a specific database, Docker can simplify the setup of these dependencies. Install Docker from https://www.docker.com/get-started/.
+Email Server (for testing notifications): You'll need access to an SMTP server for testing email notifications. You can use a real email server or a tool like Mailtrap (https://mailtrap.io/) for development.
+Steps:
+
+ Clone the Repository:
+Open your terminal or command prompt and navigate to the directory where you want to clone the project. 1  Then, run:   
+1.
+github.com
+github.com
+
+Bash
+
+git clone <your_project_repository_link>
+cd retry-replay-framework
+Replace <your_project_repository_link> with the actual link to your project's Git repository.
+
+Build the Project:
+Navigate to the root directory of the cloned project (retry-replay-framework) and run the Maven build command:
+
+Bash
+
+mvn clean install
+This command will download all the necessary dependencies, compile the Java code, run unit and integration tests, and package the application.
+
+Set up Dependencies (if applicable):
+
+Database:
+
+Embedded Database (e.g., H2): If you've configured Spring Boot to use an embedded database for development, it will likely be set up automatically. You might need to check the application.properties or application.yml file for its configuration.
+External Database (e.g., PostgreSQL, MySQL):
+Install the database on your local machine.
+Create a database schema for the application (if not automatically created by Spring Boot).
+Update the database connection details in your application.properties or application.yml file (e.g., URL, username, password).
+Kafka (if implemented):
+
+Using Docker (Recommended): You can use Docker Compose to set up a Kafka broker and potentially Zookeeper. Create a docker-compose.yml file (or use one provided in the repository) with the necessary configurations and run:
+Bash
+
+docker-compose up -d
+Local Installation: If you have Kafka installed locally, ensure the Kafka server and Zookeeper are running.
+Update the Kafka broker details in your application.properties or application.yml file (e.g., spring.kafka.bootstrap-servers).
+Email Server:
+
+If you're using a real SMTP server, configure its details in your application.properties or application.yml (e.g., spring.mail.host, spring.mail.port, spring.mail.username, spring.mail.password).
+If you're using Mailtrap, sign up for an account and use the provided SMTP credentials in your configuration file.
+Configure the Application:
+Review the src/main/resources/application.properties or src/main/resources/application.yml file. This file contains various configuration settings for the Spring Boot application, including:
+
+Server port (server.port).
+Database connection details (if using an external database).
+Kafka broker addresses (if using Kafka).
+Email server details.
+Quartz scheduler properties.
+Retry and replay framework specific configurations (e.g., default retry intervals, maximum attempts).
+Logging levels.
+Security settings.
+Adjust these settings according to your local environment. You might need to create a separate configuration file (e.g., application-dev.properties or application-local.yml) for your development environment and activate it using the spring.profiles.active property.
+
+Run the Application:
+There are several ways to run the Spring Boot application:
+
+From your IDE: Most IDEs (IntelliJ IDEA, Eclipse, VS Code) allow you to run the main application class (RetryReplayApplication.java) directly. Right-click on the class and select "Run" or "Debug."
+
+Using Maven: Navigate to the project root directory in your terminal and run:
+
+Bash
+
+mvn spring-boot:run
+The application should start, and you should see logs indicating the startup process. By default, the web UI will likely be accessible at http://localhost:8080 (or a different port if configured).
+
+Access the Web UI:
+Open your web browser and navigate to the URL where the application is running (e.g., http://localhost:8080). You should see the login page of the Retry & Replay Framework UI.
+
+Testing and Development:
+You can now interact with the UI to:
+
+Monitor transaction statuses (initially, there might not be any transactions).
+(If configured) Trigger test failures to observe the retry mechanism in action.
+Manually select and replay transactions (once failures occur and are recorded).
+Observe logs and email notifications (if configured correctly).
+Further Development:
+
+Make changes to the Java code in the src/main/java directory.
+Modify UI files in the src/main/resources/static and src/main/resources/templates directories.
+After making changes, you might need to rebuild the project using Maven (mvn clean install) or, if your IDE supports it, enable hot reloading for faster iteration.
+Write unit and integration tests in the src/test/java directory to ensure the correctness of your changes. You can run these tests from your IDE or using the Maven command mvn test.
+By following these steps, you should be able to set up and run the Retry & Replay Framework locally for development and testing. Remember to consult the project's README.md and any specific developer guides in the docs/ directory for more detailed instructions or project-specific setup requirements.
