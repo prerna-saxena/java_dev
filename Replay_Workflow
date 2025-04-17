@@ -1,0 +1,52 @@
+The Replay Workflow in this project is designed to allow authorized users to manually intervene and re-execute failed transactions for error correction. Here's a breakdown of the typical steps involved:
+
+1. Identification of Failed Transactions:
+
+The system continuously monitors the status of transactions across integrated systems.
+Failed transactions are logged and their details (including relevant context, input data, error information, and timestamp) are persisted in a designated data store (likely the same database used for retry history).
+The Dashboard UI provides a view of these failed transactions, allowing users to filter and search based on criteria like system, transaction type, failure time, error message, etc.
+2. User Selection for Replay:
+
+Through the Web-Based UI, authorized users (based on their roles) can select one or more failed transactions that they want to attempt to replay.
+The UI should provide sufficient information about each failed transaction to help users make informed decisions about which ones to replay.
+3. Replay Configuration (Optional):
+
+Depending on the transaction type and the desired outcome, the UI might allow users to configure certain parameters for the replay attempt. This aligns with the "configurable parameters" requirement:
+Scope: While the initial selection narrows the scope, further refinement might be possible (e.g., replaying all transactions of a specific type within a date range).
+Timing: Users might have the option to trigger the replay immediately or schedule it for a later time.
+Data Modification (Potentially): In some advanced scenarios and with proper authorization and auditing, the UI might allow users to review and potentially modify the input data of the failed transaction before replaying it (with strict validation). This needs careful consideration for data integrity.
+System Context Override (Carefully Considered): In specific, well-understood scenarios, there might be an option to adjust certain system context parameters for the replay, but this requires significant caution and understanding of the implications.
+4. Replay Initiation:
+
+Once the user has selected the transactions and configured any necessary parameters, they initiate the replay process through the UI (e.g., by clicking a "Replay" button).
+The UI sends a request to the Replay Management Service in the backend.
+5. Replay Processing by the Backend:
+
+The Replay Management Service receives the replay request, including the identifiers of the transactions to be replayed and any user-provided configuration.
+Transaction Retrieval: The service retrieves the details of the selected failed transactions from the data store.
+Validation: Before attempting the replay, the service performs necessary validations to ensure the integrity of the replay process and adherence to system context. This might involve checking:
+The current state of the involved systems.
+Dependencies on other transactions.
+Data integrity rules.
+Replay Execution Engine: The Replay Management Service delegates the actual re-execution of the transaction to the Replay Execution Engine. This engine is responsible for:
+Re-invoking the original operation or a similar process that attempts to achieve the desired outcome of the failed transaction.
+Using the original input data (or potentially modified data if allowed and applicable).
+Ensuring that the replay respects whether the original operation was stateful or stateless:
+Stateless Replay: For stateless transactions, the replay can typically be attempted independently.
+Stateful Replay: For stateful transactions, the Replay Execution Engine needs to be aware of the required prior state and might need to reconstruct it or ensure it's in the correct condition before attempting the replay. This could involve querying other systems or reviewing the history of related transactions.
+Interaction with Target Integrated Systems: The Replay Execution Engine interacts with the relevant target integrated systems to re-execute the transaction.
+Status Tracking: The Replay Management Service updates the status of the replayed transactions (e.g., "Replaying," "Replayed Successfully," "Replay Failed") in the data store.
+6. Logging and Monitoring:
+
+All steps of the replay process (initiation, retrieval, validation, execution, and status updates) are logged in detail by the Logging Service, including correlation IDs for traceability.
+The Dashboard UI is updated in real-time (or near real-time) to reflect the status of the replayed transactions.
+7. Notification:
+
+Upon completion of the replay attempt (success or failure), the Notification Service sends email alerts to the relevant users, informing them of the outcome. The content of these emails can be customized using configurable email templates.
+8. Error Handling During Replay:
+
+If the replay attempt also fails, the system should log the failure details. Depending on the configuration, there might be options to:
+Allow further retry attempts based on a separate (potentially more aggressive) retry policy for replays.
+Mark the transaction as permanently failed after a certain number of replay failures.
+Trigger incident creation in an external system.
+In summary, the Replay Workflow provides a controlled and auditable way to manually recover from failures by re-executing transactions, offering flexibility in configuration and ensuring proper validation and context adherence. The UI plays a crucial role in empowering users to manage this process effectively.
