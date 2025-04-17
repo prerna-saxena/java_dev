@@ -1,0 +1,66 @@
+Introduction:
+
+Chubb is one of the world’s largest publicly traded property and casualty insurance companies. It provides a range of insurance products, including commercial and personal property insurance, casualty insurance, accident & health insurance, reinsurance, and life insurance.
+
+Overview:
+
+In today’s fast-paced digital world, system failures and transient errors are inevitable. Businesses must ensure their applications remain resilient and capable of recovering from failures without compromising data integrity or user experience. This hackathon challenges participants to design and develop a Retry & Replay Framework—a robust solution for handling failures across integrated systems by automating retry mechanisms and enabling transaction replays.
+
+Objective:
+
+The goal of this hackathon is to identify skilled Java developers who can architect and implement a scalable and user-friendly Retry & Replay Framework. Participants will design a system that enhances reliability in business operations by intelligently managing transient failures, scheduling automated retries, and providing a replay mechanism for error correction.
+
+Key Requirements Retry Mechanism:
+
+Develop a configurable job scheduler using Spring Boot, Quartz and Apache Camel to define retry intervals and attempt limits.
+Support multiple retry strategies:
+Fixed Interval – Retries at a consistent interval.
+Exponential Backoff – Increases the wait time between retries dynamically.
+Circuit Breaker – Prevents excessive retries when a system is persistently failing.
+Jitter – Introduces randomness to avoid retry storms.
+Select the most suitable retry strategy based on failure characteristics.
+Implement event-driven retries using Kafka (optional).
+Replay Process:
+
+Provide a UI for users to manually select and replay transactions for error correction.
+Ensure validation and system context adherence during replay execution.
+Support stateful and stateless replay for handling different types of transactions.
+Allow configurable parameters such as scope (specific systems, transaction types) and timing (immediate or scheduled).
+User Interface & Access Control:
+
+Develop a web-based UI for system administrators and users.
+Implement role-based authentication for secure access to retry and replay features.
+Provide an intuitive dashboard to monitor transaction statuses, trigger retries, and access reports.
+Logging & Monitoring:
+
+Implement structured logging using Spring Boot’s logging framework with correlation IDs for traceability.
+Maintain detailed logs of retry attempts, replay executions, and outcomes.
+Notification Management:
+
+Design an automated notification service that sends email alerts upon retry/replay completion.
+Allow configurable email templates for better communication.
+Provide an option to create an incident on failure cases.
+Who Can Participate?
+
+This hackathon is targeted at Java developers with experience in Spring Boot, microservices architecture, distributed systems, and event-driven processing. Whether you’re an experienced professional or an aspiring backend engineer, this is your chance to showcase your expertise in building fault-tolerant systems.
+
+Evaluation Criteria
+
+Submissions will be evaluated based on:
+
+✔ Technical Feasibility – How effectively the solution implements retry and replay logic.
+
+✔ Scalability & Performance – Ability to handle high transaction volumes efficiently.
+
+✔ Code Quality & Best Practices – Clean, maintainable, and well-documented code.
+
+✔ UI/UX Experience – Ease of use and accessibility of the interface.
+
+✔ Logging & Monitoring Implementation – Clarity and traceability of transactions.
+
+Why Participate?
+
+Get an opportunity to showcase your Java expertise to potential employers.
+Solve a real-world system resilience challenge that businesses face today.
+Gain valuable experience in Spring Boot, Kafka, Quartz, and distributed systems.
+Stand out in the hiring process and secure career opportunities.
