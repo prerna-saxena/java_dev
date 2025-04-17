@@ -1,0 +1,211 @@
+Here's a conceptual overview of the API endpoints that the Retry & Replay Framework might expose, along with sample request and response payloads. These are illustrative and might evolve based on the specific implementation. The API will likely be RESTful, using JSON for request and response bodies.
+
+Base URL: Assuming the application runs on http://localhost:8080, the API endpoints would typically be under a specific path, e.g., /api/v1.
+
+1. Retry Management Endpoints:
+
+POST /api/v1/retry/config: Create or update a retry configuration for a specific job or transaction type.
+
+Request Payload (JSON):
+JSON
+
+{
+  "jobIdentifier": "order-processing-failed",
+  "retryStrategy": "exponential_backoff",
+  "fixedInterval": null,
+  "initialDelay": 2000,
+  "multiplier": 2,
+  "maxDelay": 60000,
+  "failureThreshold": 5,
+  "slidingWindowSize": 300000,
+  "tripTimeout": 300000,
+  "jitterRange": 1000,
+  "maxAttempts": 10,
+  "enabled": true
+}
+jobIdentifier: Unique identifier for the job/transaction type.
+retryStrategy: One of fixed_interval, exponential_backoff, circuit_breaker, jitter.
+Other fields are strategy-specific configuration parameters.
+enabled: Whether the retry mechanism is enabled for this job.
+Response Payload (JSON - Success):
+JSON
+
+{
+  "message": "Retry configuration updated successfully for order-processing-failed",
+  "jobIdentifier": "order-processing-failed"
+}
+Response Payload (JSON - Error):
+JSON
+
+{
+  "error": "Invalid retry strategy provided."
+}
+GET /api/v1/retry/config/{jobIdentifier}: Retrieve the retry configuration for a specific job.
+
+Path Parameter: jobIdentifier
+Response Payload (JSON - Success):
+JSON
+
+{
+  "jobIdentifier": "order-processing-failed",
+  "retryStrategy": "exponential_backoff",
+  "initialDelay": 2000,
+  "multiplier": 2,
+  "maxDelay": 60000,
+  "maxAttempts": 10,
+  "enabled": true
+}
+Response Payload (JSON - Error):
+JSON
+
+{
+  "error": "Retry configuration not found for order-processing-failed."
+}
+GET /api/v1/retry/status: Get the current status of jobs under retry (e.g., number of attempts, last attempt time).
+
+Optional Query Parameters: jobIdentifier (to filter by job).
+Response Payload (JSON):
+JSON
+
+[
+  {
+    "jobIdentifier": "order-processing-failed",
+    "transactionId": "txn-123",
+    "currentRetryAttempt": 3,
+    "lastAttemptTimestamp": "2025-04-17T19:45:00.000Z",
+    "nextRetryTimestamp": "2025-04-17T19:45:04.000Z",
+    "status": "RETRYING"
+  },
+  {
+    "jobIdentifier": "inventory-update-failed",
+    "transactionId": "txn-456",
+    "currentRetryAttempt": 1,
+    "lastAttemptTimestamp": "2025-04-17T19:48:00.000Z",
+    "nextRetryTimestamp": "2025-04-17T19:48:10.000Z",
+    "status": "RETRYING"
+  }
+]
+2. Replay Management Endpoints:
+
+POST /api/v1/replay/initiate: Initiate a replay for one or more failed transactions.
+
+Request Payload (JSON):
+JSON
+
+{
+  "transactionIds": ["txn-123", "txn-789"],
+  "replayParameters": {
+    "scope": "order-service",
+    "timing": "immediate",
+    "overrideData": {
+      "orderId": "new-order-id"
+    }
+  }
+}
+transactionIds: List of IDs of the failed transactions to replay.
+replayParameters: Optional parameters for the replay.
+scope: Target system or component.
+timing: immediate or scheduled (if scheduling is implemented).
+overrideData: Optional data to override during replay (use with caution and proper validation).
+Response Payload (JSON - Success):
+JSON
+
+{
+  "message": "Replay initiated successfully for transactions: txn-123, txn-789",
+  "replayIds": ["replay-abc-123", "replay-def-456"]
+}
+Response Payload (JSON - Error):
+JSON
+
+{
+  "error": "One or more transaction IDs not found."
+}
+GET /api/v1/replay/status/{replayId}: Get the status of a specific replay attempt.
+
+Path Parameter: replayId (unique ID for the replay attempt).
+Response Payload (JSON - Success):
+JSON
+
+{
+  "replayId": "replay-abc-123",
+  "transactionId": "txn-123",
+  "status": "REPLAYING",
+  "startTime": "2025-04-17T19:50:00.000Z",
+  "endTime": null,
+  "attempts": 1,
+  "outcome": null
+}
+Response Payload (JSON - Error):
+JSON
+
+{
+  "error": "Replay attempt not found with ID: replay-abc-123."
+}
+GET /api/v1/replay/history: Get the history of replay attempts, optionally filtered.
+
+Optional Query Parameters: transactionId, status, startTime, endTime, scope.
+Response Payload (JSON):
+JSON
+
+[
+  {
+    "replayId": "replay-abc-123",
+    "transactionId": "txn-123",
+    "status": "REPLAYED_SUCCESSFULLY",
+    "startTime": "2025-04-17T19:50:00.000Z",
+    "endTime": "2025-04-17T19:50:15.000Z",
+    "attempts": 1,
+    "outcome": "Order processed successfully on replay."
+  },
+  {
+    "replayId": "replay-def-456",
+    "transactionId": "txn-789",
+    "status": "REPLAY_FAILED",
+    "startTime": "2025-04-17T19:51:00.000Z",
+    "endTime": "2025-04-17T19:51:10.000Z",
+    "attempts": 1,
+    "outcome": "Replay failed due to invalid data."
+  }
+]
+3. Dashboard Data Endpoints (for UI):
+
+GET /api/v1/dashboard/summary: Get a summary of the current system state (e.g., number of active retries, failed transactions awaiting replay, recent replay statuses).
+Response Payload (JSON):
+JSON
+
+{
+  "activeRetries": 15,
+  "failedTransactionsAwaitingReplay": 5,
+  "recentReplays": [
+    {"transactionId": "txn-999", "status": "REPLAYED_SUCCESSFULLY", "endTime": "2025-04-17T19:52:00.000Z"},
+    {"transactionId": "txn-888", "status": "REPLAY_FAILED", "endTime": "2025-04-17T19:51:30.000Z"}
+  ]
+}
+4. Logging and Monitoring Endpoints (for UI or external tools):
+
+GET /api/v1/logs: Retrieve application logs, potentially filtered by criteria (e.g., level, timestamp, transaction ID).
+Optional Query Parameters: level, from, to, transactionId.
+Response Payload (JSON):
+JSON
+
+[
+  {
+    "timestamp": "2025-04-17T19:45:00.000Z",
+    "level": "INFO",
+    "message": "Attempting retry #3 for transaction txn-123."
+  },
+  {
+    "timestamp": "2025-04-17T19:50:05.000Z",
+    "level": "INFO",
+    "message": "Replay initiated for transaction txn-789."
+  }
+]
+5. Authentication and Authorization Endpoints:
+
+These are typically handled by Spring Security and might involve standard login (POST /login) and potentially user management endpoints (if the framework manages its own users). The specifics depend on the chosen authentication mechanism.
+Security Considerations:
+
+All API endpoints should be secured using appropriate authentication and authorization mechanisms (e.g., JWT tokens, session-based authentication, role-based access control as discussed earlier).
+Sensitive operations (like initiating replay with data overrides) should have strict authorization checks.
+Input validation should be performed on all request payloads to prevent security vulnerabilities.
+This list provides a starting point for the API design. The actual endpoints and their payloads will be determined by the specific features and functionalities implemented in the Retry & Replay Framework. Remember to document these APIs thoroughly (e.g., using OpenAPI/Swagger specifications).
