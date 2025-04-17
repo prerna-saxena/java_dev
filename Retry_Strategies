@@ -1,0 +1,45 @@
+For this Retry & Replay Framework project, the following retry strategies will be implemented and will be configurable:
+
+1. Fixed Interval:
+
+Description: This is the simplest retry strategy. It attempts to retry the failed operation after a fixed, pre-defined time interval, regardless of the number of previous failures.
+Configuration: The primary configuration parameter is the fixed wait time (e.g., 5 seconds, 1 minute). The maximum number of retry attempts will also be configurable.
+Use Cases: Suitable for transient errors that are likely to resolve quickly and consistently, such as temporary network glitches or minor resource contention.
+Pros: Easy to understand and implement.
+Cons: Can be inefficient if the underlying issue persists for a long time, leading to unnecessary retry attempts at the same interval. May overload a recovering system if many requests are retried simultaneously.
+2. Exponential Backoff:
+
+Description: This strategy increases the wait time between retry attempts exponentially. This means the delay grows with each subsequent failure. Often, a base interval and a multiplier are used. For example, the first retry might be after 1 second, the second after 2 seconds, the third after 4 seconds, and so on.
+Configuration: Key parameters include the initial delay, the multiplier (the factor by which the delay increases), and the maximum delay (to prevent excessively long wait times) and the maximum number of retry attempts.
+Use Cases: Effective for handling temporary overloads or intermittent service unavailability where the system might take longer to recover. The increasing delay gives the failing service more time to recover.
+Pros: Reduces the load on a failing system over time, increasing the chances of successful recovery without overwhelming it.
+Cons: Retries can become very infrequent after multiple failures, potentially delaying the eventual success if the issue resolves relatively quickly later on.
+3. Circuit Breaker:
+
+Description: This strategy aims to prevent the system from repeatedly trying to access a service that is likely to be down for an extended period. It works like an electrical circuit breaker:
+Closed State: Initially, the circuit is "closed," and retry attempts are allowed.
+Open State: If the number of consecutive failures exceeds a defined threshold within a specific time window, the circuit "opens." In the open state, no retry attempts are made for a configured trip timeout duration.
+Half-Open State: After the trip timeout expires, the circuit enters a "half-open" state. A limited number of "probe" requests are allowed to try and access the service. If these probes are successful, the circuit closes again. If they fail, the circuit returns to the open state for another trip timeout.
+Configuration: Parameters include the failure threshold, the sliding time window (to count consecutive failures), the trip timeout (duration in the open state), and the number of probe requests in the half-open state.
+Use Cases: Crucial for preventing cascading failures and protecting the overall system health when dependent services are experiencing prolonged outages.
+Pros: Improves system resilience by avoiding unnecessary attempts to a failing service, giving it time to recover.
+Cons: Introduces a delay in recovery detection (the trip timeout) before the system starts attempting to reconnect.
+4. Jitter:
+
+Description: Jitter is a technique that introduces randomness to the retry intervals. Instead of retrying exactly at a fixed or exponentially backed-off time, a small random variation is added.
+Configuration: Typically used in conjunction with other strategies (Fixed Interval or Exponential Backoff). Configuration involves defining the range of random variation (e.g., +/- a certain percentage or a fixed time range).
+Use Cases: Helps to prevent the "retry storm" problem, where multiple clients all retry a failing service at the exact same time after a failure, potentially overwhelming it further upon recovery.
+Pros: Increases the likelihood of successful recovery by distributing retry attempts over time, reducing contention on the recovering service.
+Cons: Makes retry timings less predictable.
+Strategy Selection:
+
+The framework should allow users to configure which retry strategy (or a combination, potentially with a fallback mechanism) to use for different types of transactions or target systems. The selection can be based on:
+
+Configuration per job/transaction type: Administrators can explicitly specify the desired strategy.
+Potentially based on failure characteristics (basic): The system could, in a basic implementation, try to infer the nature of the failure (e.g., based on error codes) and apply a more suitable strategy. This would require more advanced logic.
+Implementation Considerations:
+
+Each retry strategy will need to be implemented as a distinct component or class within the framework.
+The job scheduler will need to be able to apply the configured strategy to determine the delay before the next retry attempt.
+The framework should persist information about retry attempts (count, last attempt time, etc.) for each failed transaction.
+By providing these diverse and configurable retry strategies, the Retry & Replay Framework will offer a flexible and powerful solution for handling transient failures in various scenarios.
